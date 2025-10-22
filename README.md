@@ -1,50 +1,86 @@
-# Welcome to your Expo app 👋
+# MangaVerse — czytnik mang (Expo)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Krótki, lekki czytnik mang z integracją z MangaDex. Aplikacja napisana w React Native + Expo (expo-router). Ten README zawiera szybkie instrukcje instalacji, uruchomienia i najczęstsze problemy.
 
-## Get started
+## Funkcje
+- Przegląd biblioteki (MangaDex)
+- Szczegóły mangi, lista rozdziałów
+- Offline cache rozdziałów (AsyncStorage)
+- Czytnik z pinch-to-zoom / pan (bez double‑tap)
+- Prosty system logowania (token w AsyncStorage)
+- Animowane tło (Aurora)
 
-1. Install dependencies
+## Wymagania
+- Node.js (14+ zalecane)
+- Yarn lub npm
+- Expo CLI: `npm install -g expo-cli` lub `npx expo`
+- (opcjonalnie) Git, GH CLI jeśli chcesz utworzyć repozytorium z linii poleceń
 
+## Instalacja
+1. Przejdź do katalogu projektu:
+   ```bash
+   cd /home/igor/Documents/projekty/MangaVerse/manga-reader
+   ```
+2. Zainstaluj zależności (npm lub yarn):
    ```bash
    npm install
+   # lub
+   yarn
    ```
-
-2. Start the app
-
+3. Zainstaluj dodatkowe biblioteki używane w projekcie (jeśli nie są w package.json):
    ```bash
-   npx expo start
+   expo install expo-linear-gradient @react-native-async-storage/async-storage
+   npm install react-native-image-pan-zoom
+   # (opcjonalnie)
+   expo install react-native-gesture-handler
    ```
 
-In the output, you'll find options to open the app in a
+## Uruchamianie podczas developmentu
+- Metro / Expo (z czyszczeniem cache — zalecane przy zmianach routingu):
+  ```bash
+  EXPO_ROUTER_APP_ROOT=app expo start -c
+  ```
+- Otwórz w Expo Go (Android/iOS) albo w emulatorze.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Budowanie (produkcja)
+- Android:
+  ```bash
+  eas build -p android
+  ```
+- iOS:
+  ```bash
+  eas build -p ios
+  ```
+(Użyj EAS lub klasycznych narzędzi expo; skonfiguruj konto Apple/Google jeśli potrzebne.)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Ustawienia środowiskowe / tokeny
+- Aplikacja przechowuje token MangaDex w AsyncStorage pod kluczem `mangadex_token`. Możesz ustawić/usunąć go ręcznie dla debugowania.
+- Jeśli dodasz zmienne środowiskowe, umieść je w pliku `.env` (uwaga: .env jest w .gitignore).
 
-## Get a fresh project
+## Git / Repozytorium
+- Projekt ma gotowy `.gitignore`. Aby utworzyć prywatne repo i wypchnąć:
+  ```bash
+  git init
+  git add .
+  git commit -m "Initial commit"
+  gh repo create MangaVerse-manga-reader --private --source=. --remote=origin --push
+  ```
+  (jeśli nie masz `gh`, stwórz repo ręcznie na GitHub i ustaw remote)
 
-When you're ready, run:
+## Najczęstsze problemy i rozwiązania
+- "Unmatched Route" przy expo-router: upewnij się, że masz plik `app/index.js` który przekierowuje do `LoginScreen`/`LibraryScreen`.
+- Ostrzeżenia o plikach w `app/` (np. api/utils traktowane jak route): przenieś helpery poza `app/` (np. `src/api`, `src/utils`) lub poprzedź folder `_` (ale lepiej poza `app/`).
+- Pinch/gesture nie działa: upewnij się, że `react-native-gesture-handler` jest zainstalowany oraz że `app/_layout.js` opakowuje tree w `GestureHandlerRootView`. Jeśli występują konflikty, alternativa: `react-native-image-pan-zoom` (użyte w projekcie).
+- Cache rozdziałów: klucz `chapter_pages_{id}` w AsyncStorage.
 
-```bash
-npm run reset-project
-```
+## Struktura projektu (ważne pliki)
+- `app/` — ekranowa część expo-router (screens, _layout.js, index.js)
+- `src/api/` — integracje z MangaDex (getChapterPages, getLibrary, login)
+- `src/utils/` — pomocnicze funkcje
+- `app/screens/` — ekrany: LoginScreen, LibraryScreen, MangaDetailScreen, ReaderScreen
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Kontrybucja
+- Projekt prywatny — dodaj issue/przykłady lokalnie. Jeśli chcesz publicznie, rozważ dodanie licencji (MIT / Apache 2.0).
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Kontakt / dalsze kroki
+- Jeśli chcesz, przygotuję gotowy plik LICENSE (MIT) i README w wersji angielskiej, lub dodam skrypt CI (GitHub Actions) do buildów.
