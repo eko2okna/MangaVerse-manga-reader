@@ -8,7 +8,6 @@ Krótki, lekki czytnik mang z integracją z MangaDex. Aplikacja napisana w React
 - Offline cache rozdziałów (AsyncStorage)
 - Czytnik z pinch-to-zoom / pan (bez double‑tap)
 - Prosty system logowania (token w AsyncStorage)
-- Animowane tło (Aurora)
 
 ## Wymagania
 - Node.js (14+ zalecane)
