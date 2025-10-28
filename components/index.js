@@ -1,4 +1,4 @@
 import React from "react";
-import LoginScreen from "../screens/LoginScreen";
+import LoginScreen from "../app/screens/LoginScreen";
 
 export { LoginScreen };

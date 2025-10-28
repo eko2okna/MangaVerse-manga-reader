@@ -7,6 +7,8 @@ const AUTH_URL = "https://auth.mangadex.org/realms/mangadex/protocol/openid-conn
 
 const TOKEN_KEY = "mangadex_token";
 const REFRESH_KEY = "mangadex_refresh_token";
+const CLIENT_ID_KEY = "mangadex_client_id";
+const CLIENT_SECRET_KEY = "mangadex_client_secret";
 
 // 🔐 Logowanie (password grant)
 export async function login(username, password, clientId, clientSecret) {
@@ -29,11 +31,13 @@ export async function login(username, password, clientId, clientSecret) {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
 
-    const { access_token, refresh_token } = response.data;
+  const { access_token, refresh_token } = response.data;
     if (!access_token) throw new Error("Brak tokena w odpowiedzi API.");
 
     await AsyncStorage.setItem(TOKEN_KEY, access_token);
     await AsyncStorage.setItem(REFRESH_KEY, refresh_token);
+  if (clientId) await AsyncStorage.setItem(CLIENT_ID_KEY, clientId);
+  if (clientSecret) await AsyncStorage.setItem(CLIENT_SECRET_KEY, clientSecret);
 
     console.log("✅ Zalogowano pomyślnie!");
     return access_token;
@@ -65,12 +69,20 @@ export async function refreshToken() {
   if (!refresh_token) throw new Error("Brak refresh_token w pamięci.");
 
   try {
-    const data = qs.stringify({
+    // pobierz zapisane dane klienta (jeśli dostępne)
+    const [client_id, client_secret] = await Promise.all([
+      AsyncStorage.getItem(CLIENT_ID_KEY),
+      AsyncStorage.getItem(CLIENT_SECRET_KEY),
+    ]);
+
+    const payload = {
       grant_type: "refresh_token",
       refresh_token,
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-    });
+    };
+    if (client_id) payload.client_id = client_id;
+    if (client_secret) payload.client_secret = client_secret;
+
+    const data = qs.stringify(payload);
 
     const response = await axios.post(AUTH_URL, data, {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -99,6 +111,12 @@ export async function getLibrary() {
   try {
     const response = await axios.get(`${BASE_URL}/user/follows/manga`, {
       headers: { Authorization: `Bearer ${token}` },
+      params: { 
+        'includes[]': 'cover_art',
+        // możesz też dodać inne include w razie potrzeby, np. author, artist
+      },
+      // zapewnij serializację z bracketami: includes[]=cover_art
+      paramsSerializer: (params) => qs.stringify(params, { arrayFormat: 'brackets' }),
     });
     return response.data.data;
   } catch (err) {

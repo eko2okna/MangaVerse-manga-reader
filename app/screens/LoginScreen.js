@@ -30,8 +30,8 @@ export default function LoginScreen({ navigation }) {
         console.warn("Brak dostępnej metody nawigacji.");
       }
     } catch (err) {
-      console.error("Błąd w handleLogin:", err);
-      setError(err?.message ? `Błąd: ${err.message}` : "Nie udało się zalogować. Sprawdź dane logowania.");
+  console.error("Login handler error:", err);
+  setError(err?.message ? `Error: ${err.message}` : "Could not log in. Check your credentials.");
     } finally {
       setLoading(false);
     }
@@ -67,7 +67,7 @@ export default function LoginScreen({ navigation }) {
 
       <TextInput
         style={styles.input}
-        placeholder="Hasło"
+        placeholder="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -76,7 +76,7 @@ export default function LoginScreen({ navigation }) {
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Zaloguj się</Text>}
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Log in</Text>}
       </TouchableOpacity>
     </View>
   );

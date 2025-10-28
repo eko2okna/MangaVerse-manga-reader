@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Image } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Image, RefreshControl } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getLibrary } from "../../src/api/mangadex";
 import { useRouter } from "expo-router";
@@ -8,6 +8,7 @@ export default function LibraryScreen({ navigation }) {
   const router = useRouter();
   const [library, setLibrary] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -15,15 +16,15 @@ export default function LibraryScreen({ navigation }) {
       try {
         const token = await AsyncStorage.getItem("mangadex_token");
         if (!token) {
-          setError("Brak tokena – zaloguj się ponownie.");
+          setError("Missing token — please log in again.");
           setLoading(false);
           return;
         }
         const data = await getLibrary(token);
         setLibrary(data);
       } catch (err) {
-        console.error("Błąd pobierania biblioteki:", err);
-        setError("Nie udało się pobrać biblioteki.");
+        console.error("Failed to load library:", err);
+        setError("Failed to load library.");
       } finally {
         setLoading(false);
       }
@@ -31,6 +32,24 @@ export default function LibraryScreen({ navigation }) {
 
     fetchLibrary();
   }, []);
+
+  async function onRefresh() {
+    setRefreshing(true);
+    try {
+      const token = await AsyncStorage.getItem("mangadex_token");
+      if (!token) {
+        setError("Missing token — please log in again.");
+        return;
+      }
+      const data = await getLibrary(token);
+      setLibrary(data);
+    } catch (e) {
+      console.error("Refresh error:", e);
+      setError("Failed to refresh library.");
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -53,6 +72,7 @@ export default function LibraryScreen({ navigation }) {
       <FlatList
         data={library}
         keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
         renderItem={({ item }) => {
           const coverFileName = item.relationships.find(r => r.type === "cover_art")?.attributes?.fileName;
           const coverUrl = coverFileName
