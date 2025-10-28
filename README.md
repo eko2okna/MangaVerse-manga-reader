@@ -23,7 +23,6 @@ Lightweight MangaDex reader built with React Native + Expo (expo-router). This R
   - End of chapter transitions: optional sentinel page “Continue to next chapter…”
   - Reading progress is NOT reset on finish; it stays on the last page
 - Offline cache of chapter pages (AsyncStorage)
-=======
 
 ## Requirements
 - Node.js 18+ recommended
