@@ -30,8 +30,8 @@ export default function Index() {
           await router.replace("/screens/LoginScreen");
         }
       } catch (e) {
-        console.error("Startup error:", e);
-        setError("Wystąpił błąd podczas sprawdzania statusu logowania.");
+  console.error("Startup error:", e);
+  setError("An error occurred while checking login status.");
       } finally {
         setChecking(false);
       }
@@ -58,7 +58,7 @@ export default function Index() {
           }}
           style={{ padding: 12, backgroundColor: "#ff0066", borderRadius: 8 }}
         >
-          <Text style={{ color: "#fff", fontWeight: "600" }}>Przejdź do logowania</Text>
+          <Text style={{ color: "#fff", fontWeight: "600" }}>Go to Login</Text>
         </TouchableOpacity>
       </View>
     );
