@@ -2,27 +2,7 @@
 
 Lightweight MangaDex reader built with React Native + Expo (expo-router). This README covers setup, running, and key features. The app UI is fully in English.
 
-## Features
-- Sign in to MangaDex (password grant):
-  - Access/refresh tokens stored in AsyncStorage
-  - Automatic token refresh using stored Client ID and Client Secret
-- Library:
-  - Fetches followed manga with cover thumbnails (uses `includes[]=cover_art`)
-  - Pull-to-refresh
-- Manga details:
-  - Chapter list with progress indicator `(current/total)`
-  - “Completed ✅” label when you finished a chapter
-  - Downloaded marker: ⬇️
-  - Filter: “Downloaded only” and delete cached chapter (removes pages and reading progress)
-- Reader:
-  - Horizontal, right-to-left style (inverted paging)
-  - Pinch-to-zoom; taps only navigate when not zoomed
-  - Tap zones: left/right half to go next/previous page
-  - Page indicator at bottom (`current / total`)
-  - Remembers last page for each chapter (persists across sessions)
-  - End of chapter transitions: optional sentinel page “Continue to next chapter…”
-  - Reading progress is NOT reset on finish; it stays on the last page
-- Offline cache of chapter pages (AsyncStorage)
+
 
 ## Requirements
 - Node.js 18+ recommended
