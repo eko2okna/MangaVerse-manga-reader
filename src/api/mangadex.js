@@ -15,7 +15,7 @@ export async function login(username, password, clientId, clientSecret) {
   const user = username?.trim();
   const pass = password?.trim();
 
-  if (!user || !pass) throw new Error("Brak username/email lub hasła.");
+  if (!user || !pass) throw new Error("Missing username/email or password.");
 
   let payload;
   try {
@@ -31,15 +31,15 @@ export async function login(username, password, clientId, clientSecret) {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
 
-  const { access_token, refresh_token } = response.data;
-    if (!access_token) throw new Error("Brak tokena w odpowiedzi API.");
+    const { access_token, refresh_token } = response.data;
+    if (!access_token) throw new Error("No access token in API response.");
 
     await AsyncStorage.setItem(TOKEN_KEY, access_token);
     await AsyncStorage.setItem(REFRESH_KEY, refresh_token);
-  if (clientId) await AsyncStorage.setItem(CLIENT_ID_KEY, clientId);
-  if (clientSecret) await AsyncStorage.setItem(CLIENT_SECRET_KEY, clientSecret);
+    if (clientId) await AsyncStorage.setItem(CLIENT_ID_KEY, clientId);
+    if (clientSecret) await AsyncStorage.setItem(CLIENT_SECRET_KEY, clientSecret);
 
-    console.log("✅ Zalogowano pomyślnie!");
+    console.log("✅ Logged in successfully!");
     return access_token;
 
   } catch (err) {
@@ -48,13 +48,13 @@ export async function login(username, password, clientId, clientSecret) {
       password: pass ? `*** (len=${pass.length})` : null,
       client_id: clientId,
     };
-    console.error("❌ Błąd logowania:", {
+    console.error("❌ Login error:", {
       status: err.response?.status,
       responseData: err.response?.data,
       request: safeRequest,
       message: err.message,
     });
-    throw new Error("Nie udało się zalogować — sprawdź dane logowania lub klienta API.");
+    throw new Error("Login failed — check your credentials or API client settings.");
   }
 }
 
@@ -66,7 +66,7 @@ export async function getToken() {
 // 🔄 Odświeżanie tokena
 export async function refreshToken() {
   const refresh_token = await AsyncStorage.getItem(REFRESH_KEY);
-  if (!refresh_token) throw new Error("Brak refresh_token w pamięci.");
+  if (!refresh_token) throw new Error("No refresh_token stored.");
 
   try {
     // pobierz zapisane dane klienta (jeśli dostępne)
@@ -89,17 +89,17 @@ export async function refreshToken() {
     });
 
     const { access_token, refresh_token: new_refresh } = response.data;
-    if (!access_token) throw new Error("Brak tokena w odpowiedzi API przy odświeżaniu.");
+  if (!access_token) throw new Error("No access token in API response during refresh.");
 
     await AsyncStorage.setItem(TOKEN_KEY, access_token);
     if (new_refresh) await AsyncStorage.setItem(REFRESH_KEY, new_refresh);
 
-    console.log("🔁 Token odświeżony.");
+    console.log("🔁 Token refreshed.");
     return access_token;
 
   } catch (err) {
-    console.error("❌ Błąd przy odświeżaniu tokena:", err.response?.data || err.message);
-    throw new Error("Nie udało się odświeżyć tokena.");
+    console.error("❌ Token refresh error:", err.response?.data || err.message);
+    throw new Error("Failed to refresh token.");
   }
 }
 
@@ -120,7 +120,7 @@ export async function getLibrary() {
     });
     return response.data.data;
   } catch (err) {
-    console.error("❌ Błąd pobierania biblioteki:", err.response?.data || err.message);
+    console.error("❌ Library fetch error:", err.response?.data || err.message);
     throw err;
   }
 }
@@ -136,7 +136,7 @@ export async function getMangaChapters(mangaId, { translatedLanguage = "en", lim
     // API zwraca obiekt z polem data (lista rozdziałów)
     return response.data?.data || [];
   } catch (err) {
-    console.error("Błąd w getMangaChapters:", err);
+    console.error("getMangaChapters error:", err);
     throw err;
   }
 }
@@ -179,7 +179,7 @@ export async function getChapterPages(chapterId) {
         chapterResponse: chapterResp.data,
         atHomeResponse: atHomeResp.data,
       });
-      throw new Error("Nieprawidłowa odpowiedź API podczas pobierania stron rozdziału.");
+      throw new Error("Invalid API response while fetching chapter pages.");
     }
 
     const base = baseUrl.replace(/\/+$/, "");
@@ -187,7 +187,7 @@ export async function getChapterPages(chapterId) {
 
     return pages;
   } catch (err) {
-    console.error("Błąd w getChapterPages:", err);
+    console.error("getChapterPages error:", err);
     throw err;
   }
 }

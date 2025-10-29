@@ -65,7 +65,7 @@ export default function MangaDetailScreen({ route, navigation }) {
                   const pages = await getChapterPages(c.id);
                   total = Array.isArray(pages) ? pages.length : null;
                 } catch (e) {
-                  console.warn("Nie udało się pobrać liczby stron dla", c.id, e?.message || e);
+                  console.warn("Unable to fetch page count for", c.id, e?.message || e);
                 }
               }
 
@@ -158,7 +158,7 @@ export default function MangaDetailScreen({ route, navigation }) {
       setDownloadedIds((prev) => new Set(Array.from(prev).concat(item.id)));
       // Nie otwieraj automatycznie czytnika po pobraniu — zostajemy na liście.
     } catch (e) {
-      console.error("Błąd pobierania rozdziału:", e);
+      console.error("Chapter download error:", e);
     } finally {
       setDownloadingId(null);
     }
@@ -181,7 +181,7 @@ export default function MangaDetailScreen({ route, navigation }) {
         return next;
       });
     } catch (e) {
-      console.error("Błąd usuwania pobranego rozdziału:", e);
+      console.error("Downloaded chapter deletion error:", e);
     }
   }
 
