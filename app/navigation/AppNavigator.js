@@ -18,11 +18,11 @@ export default function LoginScreen({ navigation }) {
     try {
       const token = await login(username, password, clientId, clientSecret, email);
       if (token) {
-        console.log("Zalogowano, token:", token);
-        navigation.replace("Library"); // przejście do biblioteki
+  console.log("Logged in, token:", token);
+  navigation.replace("Library"); // go to library
       }
     } catch (err) {
-      setError("Nie udało się zalogować. Sprawdź dane logowania.");
+  setError("Could not log in. Check your credentials.");
     } finally {
       setLoading(false);
     }
@@ -34,7 +34,7 @@ export default function LoginScreen({ navigation }) {
 
       <TextInput
         style={styles.input}
-        placeholder="Nazwa użytkownika"
+  placeholder="Username"
         value={username}
         onChangeText={setUsername}
         autoCapitalize="none"
@@ -42,7 +42,7 @@ export default function LoginScreen({ navigation }) {
 
       <TextInput
         style={styles.input}
-        placeholder="Hasło"
+  placeholder="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -75,7 +75,7 @@ export default function LoginScreen({ navigation }) {
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Zaloguj się</Text>}
+  {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Log in</Text>}
       </TouchableOpacity>
     </View>
   );
