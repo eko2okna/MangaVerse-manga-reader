@@ -9,6 +9,8 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "com.eko2okna.manga-reader",
+      "buildNumber": "1.0.0",
       "supportsTablet": true
     },
     "android": {
