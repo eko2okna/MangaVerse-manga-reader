@@ -12,7 +12,7 @@ Lightweight MangaDex reader built with React Native + Expo (expo-router). This R
 - Manga details:
   - Chapter list with progress indicator `(current/total)`
   - “Completed ✅” label when you finished a chapter
-  - Downloaded marker: 📥
+  - Downloaded marker: ⬇️
   - Filter: “Downloaded only” and delete cached chapter (removes pages and reading progress)
 - Reader:
   - Horizontal, right-to-left style (inverted paging)
