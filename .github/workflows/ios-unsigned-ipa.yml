@@ -1,0 +1,79 @@
+name: iOS unsigned IPA (for AltStore)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-ipa:
+    runs-on: macos-14
+    env:
+      EXPO_NO_INTERACTIVE: "1"
+      NODE_OPTIONS: "--max_old_space_size=4096"
+      # Default scheme expected after Expo prebuild. Update if your Xcode scheme is different.
+      XCODE_SCHEME: "MangaVerse"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          # Align Expo-compatible package versions
+          npx expo install
+
+      - name: Prebuild iOS project
+        run: npx expo prebuild --platform ios
+
+      - name: Install CocoaPods
+        working-directory: ios
+        run: pod install
+
+      - name: Show Xcode workspace and schemes (debug helper)
+        run: |
+          set -euo pipefail
+          WORKSPACE=$(ls ios/*.xcworkspace | head -n1)
+          echo "Workspace: $WORKSPACE"
+          xcodebuild -list -workspace "$WORKSPACE" || true
+
+      - name: Build Release (no code signing)
+        run: |
+          set -euo pipefail
+          WORKSPACE=$(ls ios/*.xcworkspace | head -n1)
+          echo "Using workspace: $WORKSPACE"
+          echo "Using scheme: ${XCODE_SCHEME}"
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "${XCODE_SCHEME}" \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGNING_IDENTITY=""
+
+      - name: Package .ipa
+        run: |
+          set -euo pipefail
+          APP_PATH=$(find build/Build/Products/Release-iphoneos -maxdepth 1 -name "*.app" | head -n1)
+          if [ -z "$APP_PATH" ]; then
+            echo "No .app found in build/Build/Products/Release-iphoneos" >&2
+            exit 1
+          fi
+          echo "Found app: $APP_PATH"
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -qry MangaVerse-unsigned.ipa Payload
+          rm -rf Payload
+          ls -lh MangaVerse-unsigned.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MangaVerse-unsigned-ipa
+          path: MangaVerse-unsigned.ipa
