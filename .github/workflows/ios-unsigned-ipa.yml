@@ -41,6 +41,10 @@ jobs:
         working-directory: ios
         run: pod install --repo-update
 
+      - name: Install xcpretty (compact Xcode logs)
+        run: |
+          gem install xcpretty --no-document
+
       - name: Show Xcode workspace and schemes (debug helper)
         run: |
           set -euo pipefail
@@ -70,7 +74,8 @@ jobs:
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGNING_IDENTITY=""
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGNING_IDENTITY="" \
+            | xcpretty --utf --color
 
       - name: Package .ipa
         run: |
