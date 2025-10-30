@@ -25,7 +25,14 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "MangaVerse",
+      "shortName": "MangaVerse",
+      "display": "standalone",
+      "startUrl": "/",
+      "scope": "/",
+      "themeColor": "#0b5cff",
+      "backgroundColor": "#ffffff"
     },
     "plugins": [
       "expo-router",
