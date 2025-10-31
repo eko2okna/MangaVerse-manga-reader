@@ -81,6 +81,10 @@ export default function ReaderScreen({ route, navigation }) {
   useEffect(() => { isZoomedRef.current = isZoomed; }, [isZoomed]);
   useEffect(() => { pagesRef.current = pages; }, [pages]);
   useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
+  // Stable config/handlers for FlatList (avoid creating hooks inside JSX)
+  const viewabilityConfigRef = useRef({ viewAreaCoveragePercentThreshold: 50 });
+  const onViewableItemsChangedRef = useRef(null);
+  const goToNextChapterRef = useRef(null);
 
   // obliczamy wysokość strony (okno - przybliżony header)
   const WINDOW_HEIGHT = Dimensions.get("window").height;
@@ -212,6 +216,32 @@ export default function ReaderScreen({ route, navigation }) {
     }
   };
 
+  // Keep latest goToNextChapter in a ref to avoid stale closures
+  useEffect(() => {
+    goToNextChapterRef.current = goToNextChapter;
+  }, [goToNextChapter]);
+
+  // Initialize a stable onViewableItemsChanged handler once, using refs inside
+  if (!onViewableItemsChangedRef.current) {
+    onViewableItemsChangedRef.current = ({ viewableItems }) => {
+      if (isZoomedRef.current) return; // avoid updates during zoom/pan
+      if (viewableItems && viewableItems.length > 0) {
+        const idx = viewableItems[0]?.index;
+        if (typeof idx === "number") {
+          const pagesNow = pagesRef.current || [];
+          if (pagesNow.length > 0 && idx === pagesNow.length) {
+            // sentinel visible -> go to next chapter
+            return goToNextChapterRef.current && goToNextChapterRef.current();
+          }
+          if (idx !== currentIndexRef.current) {
+            currentIndexRef.current = idx;
+            setCurrentIndex(idx);
+          }
+        }
+      }
+    };
+  }
+
   // usunięto prompt na końcu rozdziału na prośbę użytkownika
 
   if (loading) return (
@@ -286,25 +316,8 @@ export default function ReaderScreen({ route, navigation }) {
         windowSize={5}
         removeClippedSubviews={false}
         onMomentumScrollEnd={undefined}
-        viewabilityConfig={useRef({ viewAreaCoveragePercentThreshold: 50 }).current}
-        onViewableItemsChanged={useRef(({ viewableItems }) => {
-          if (isZoomedRef.current) return; // avoid updates during zoom/pan
-          if (viewableItems && viewableItems.length > 0) {
-            const idx = viewableItems[0]?.index;
-            if (typeof idx === "number") {
-              const pagesNow = pagesRef.current || [];
-              if (pagesNow.length > 0 && idx === pagesNow.length) {
-                // sentinel visible -> go to next chapter
-                goToNextChapter();
-                return;
-              }
-              if (idx !== currentIndexRef.current) {
-                currentIndexRef.current = idx;
-                setCurrentIndex(idx);
-              }
-            }
-          }
-        }).current}
+        viewabilityConfig={viewabilityConfigRef.current}
+        onViewableItemsChanged={onViewableItemsChangedRef.current}
         getItemLayout={(_, index) => ({ length: PAGE_WIDTH, offset: PAGE_WIDTH * index, index })}
       />
       {/* Pasek postępu/pozycji strony */}
