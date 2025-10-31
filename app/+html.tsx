@@ -24,7 +24,7 @@ export default function Document({ children }: { children?: React.ReactNode }) {
   {/* Manifest & icons */}
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/apple-icon-180.png" />
-  <link rel="icon" type="image/png" sizes="196x196" href="/icons/favicon-196.png" />
+  <link rel="icon" href="/favicon.ico" />
       </head>
       <body>
         {children}
