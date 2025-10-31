@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   View,
   Image,
@@ -74,6 +74,13 @@ export default function ReaderScreen({ route, navigation }) {
   const [chaptersOrder, setChaptersOrder] = useState([]);
   const [chapterPos, setChapterPos] = useState(null);
   const [transitioningNext, setTransitioningNext] = useState(false);
+  // Stable refs mirroring state for FlatList callbacks
+  const isZoomedRef = useRef(isZoomed);
+  const pagesRef = useRef(pages);
+  const currentIndexRef = useRef(currentIndex);
+  useEffect(() => { isZoomedRef.current = isZoomed; }, [isZoomed]);
+  useEffect(() => { pagesRef.current = pages; }, [pages]);
+  useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
 
   // obliczamy wysokość strony (okno - przybliżony header)
   const WINDOW_HEIGHT = Dimensions.get("window").height;
@@ -279,21 +286,25 @@ export default function ReaderScreen({ route, navigation }) {
         windowSize={5}
         removeClippedSubviews={false}
         onMomentumScrollEnd={undefined}
-        viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
-        onViewableItemsChanged={({ viewableItems }) => {
-          if (isZoomed) return; // nie aktualizuj indeksu w trakcie zoomu/panowania
+        viewabilityConfig={useRef({ viewAreaCoveragePercentThreshold: 50 }).current}
+        onViewableItemsChanged={useRef(({ viewableItems }) => {
+          if (isZoomedRef.current) return; // avoid updates during zoom/pan
           if (viewableItems && viewableItems.length > 0) {
             const idx = viewableItems[0]?.index;
             if (typeof idx === "number") {
-              if (pages.length > 0 && idx === pages.length) {
-                // sentinel widoczny -> przejście do kolejnego rozdziału
+              const pagesNow = pagesRef.current || [];
+              if (pagesNow.length > 0 && idx === pagesNow.length) {
+                // sentinel visible -> go to next chapter
                 goToNextChapter();
                 return;
               }
-              setCurrentIndex(idx);
+              if (idx !== currentIndexRef.current) {
+                currentIndexRef.current = idx;
+                setCurrentIndex(idx);
+              }
             }
           }
-        }}
+        }).current}
         getItemLayout={(_, index) => ({ length: PAGE_WIDTH, offset: PAGE_WIDTH * index, index })}
       />
       {/* Pasek postępu/pozycji strony */}

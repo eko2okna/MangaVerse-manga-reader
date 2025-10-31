@@ -1,6 +1,7 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import qs from "qs"; // npm install qs
+// No platform-specific API proxying; Expo Go uses native platforms
 
 const BASE_URL = "https://api.mangadex.org";
 const AUTH_URL = "https://auth.mangadex.org/realms/mangadex/protocol/openid-connect/token";
