@@ -1,0 +1,31 @@
+# HTTPS on 443 (public), proxy to app served on http://127.0.0.1:40141
+
+server {
+    listen 443 ssl http2;
+    server_name mangaverse.tojest.dev;  # change if needed
+
+    # Certificates (use panel or certbot DNS-01/HTTP-01 on another vhost)
+    ssl_certificate     /etc/letsencrypt/live/mangaverse.tojest.dev/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/mangaverse.tojest.dev/privkey.pem;
+
+    # Proxy to upstream on 40141
+    location / {
+        proxy_pass http://127.0.0.1:40141;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_http_version 1.1;
+    }
+
+    # Ensure correct MIME for manifest
+    location = /manifest.webmanifest { add_header Content-Type application/manifest+json; proxy_pass http://127.0.0.1:40141/manifest.webmanifest; }
+    # Avoid hard cache on SW
+    location = /sw.js { add_header Cache-Control no-cache; proxy_pass http://127.0.0.1:40141/sw.js; }
+}
+
+# (Optional) Plain HTTP redirect to HTTPS (requires port 80 available on this host)
+# server {
+#     listen 80;
+#     server_name mangaverse.tojest.dev;
+#     return 301 https://$host$request_uri;
+# }

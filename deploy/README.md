@@ -38,12 +38,53 @@ sudo systemctl reload nginx
 
 ## 4) HTTPS and PWA
 
-- Service Workers (instalowalne PWA) wymagają HTTPS. Jeśli zostaniesz przy HTTP na porcie 40141, część funkcji PWA (SW) będzie wyłączona na większości przeglądarek/mobilkach.
-- Rekomendacje:
-	1. Użyj standardowego 443 na tym samym serwerze z inną subdomeną (Nginx obsługuje wiele vhostów na 443) i reverse proxy do 40141, lub
-	2. Skonfiguruj HTTPS bezpośrednio na 40141, jeśli masz certyfikat (panel mikr.us lub DNS-01 w Let’s Encrypt). W pliku `nginx.conf.example` dodałem zakomentowany blok dla `listen 40141 ssl` – wystarczy podać ścieżki do certów.
+- Service Workers (instalowalne PWA) wymagają HTTPS. Jeśli zostaniesz przy HTTP na porcie 40141, SW nie zarejestruje się (poza localhost).
+- Cloudflare i niestandardowe porty:
+	- Cloudflare proxy (pomarańczowa chmurka) obsługuje tylko wybrane porty; 40141 nie jest na liście proxy’owanych portów.
+	- Masz 2 proste opcje, żeby mieć HTTPS przy zachowaniu 40141 na serwerze:
+		1. Cloudflare Tunnel (cloudflared): domena na 443 u Cloudflare → tunel do `http://localhost:40141`. Nie musisz otwierać 80/443 na VPS. Patrz niżej (sekcja 4.1).
+		2. HTTPS na 40141 bezpośrednio na VPS (origin TLS) i „DNS only” w Cloudflare (szara chmurka). Wtedy wchodzisz przez `https://domena:40141`.
 
-Uwaga: Let’s Encrypt HTTP-01 wymaga portu 80, więc jeśli 80 jest zajęty na tym hoście, użyj DNS-01 lub zrób terminację TLS na 443 i reverse proxy do 40141.
+### 4.1 Cloudflare Tunnel (polecane bez grzebania w 443 na VPS)
+
+1. Zainstaluj cloudflared na VPS (Ubuntu/Debian przykład):
+```bash
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
+echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
+sudo apt update && sudo apt install -y cloudflared
+```
+
+2. Zaloguj i utwórz tunel:
+```bash
+cloudflared tunnel login
+cloudflared tunnel create mangaverse-tunnel
+```
+
+3. Skonfiguruj trasę i ingress (patrz `deploy/cloudflared-tunnel.example.yml`), np.:
+```yaml
+ingress:
+	- hostname: mangaverse.tojest.dev
+		service: http://localhost:40141
+	- service: http_status:404
+```
+
+4. Zmapuj DNS:
+```bash
+cloudflared tunnel route dns mangaverse-tunnel mangaverse.tojest.dev
+```
+
+5. Uruchom jako usługę:
+```bash
+sudo cloudflared service install
+sudo systemctl enable --now cloudflared
+```
+
+Po tym Twoja domena będzie dostępna po HTTPS (przez Cloudflare) i będzie proxy’owana do lokalnego portu 40141 na VPS.
+
+### 4.2 HTTPS bezpośrednio na 40141 (origin TLS)
+
+- Użyj `deploy/nginx.40141-ssl.conf.example`, podaj ścieżki do certów i `root /mangaverse;`.
+- W Cloudflare ustaw rekord DNS na „DNS only” (szara chmurka), i łącz się przez `https://mangaverse.tojest.dev:40141`.
 
 ## 5) Verify PWA
 - Chrome/Android: open the site → install prompt (or Chrome menu → Install App)
