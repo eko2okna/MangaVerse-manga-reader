@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Image, RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Image, RefreshControl, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getLibrary } from "../../src/api/mangadex";
+import { getLibrary, logout } from "../../src/api/mangadex";
 import { useRouter } from "expo-router";
 
 export default function LibraryScreen({ navigation }) {
@@ -69,6 +69,36 @@ export default function LibraryScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Library</Text>
+        <TouchableOpacity
+          accessibilityLabel="Log out"
+          onPress={async () => {
+            try {
+              await logout();
+              // wyczyść ewentualne lokalne cache postępu
+              await AsyncStorage.multiRemove([
+                "selected_manga",
+                "selected_chapter",
+                "chapters_order",
+                "current_chapter_index",
+              ]);
+              if (router && typeof router.replace === "function") {
+                router.replace("/screens/LoginScreen");
+              } else if (router && typeof router.push === "function") {
+                router.push("/screens/LoginScreen");
+              } else if (navigation && typeof navigation.navigate === "function") {
+                navigation.navigate("LoginScreen");
+              }
+            } catch (e) {
+              Alert.alert("Logout", "Could not log out. Please try again.");
+            }
+          }}
+          style={styles.headerButton}
+        >
+          <Text style={styles.headerButtonText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={library}
         keyExtractor={(item) => item.id}
@@ -110,6 +140,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0d0d0d",
     padding: 10,
+  },
+  header: {
+    width: "100%",
+    paddingHorizontal: 10,
+    paddingTop: 8,
+    paddingBottom: 6,
+    backgroundColor: "transparent",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  headerButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "#1c1c1e",
+  },
+  headerButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "500",
   },
   center: {
     flex: 1,

@@ -95,12 +95,17 @@ async function main() {
     .png()
     .toFile(bgOut);
 
-  // Monochrome: derive from source, grayscale + threshold, white glyph on transparent
-  const monoContent = await sharp(srcPath)
+  // Monochrome: derive mask from the alpha channel of the resized source so we only keep opaque glyph
+  const resizedSrc = await sharp(srcPath)
     .resize({ width: contentSize, height: contentSize, fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .toColourspace('b-w')
-    .linear(1, 0) // keep range
-    .threshold(200) // binarize
+    .png()
+    .toBuffer();
+
+  // Extract alpha channel as mask (anything with alpha > 0 becomes opaque)
+  const alphaMask = await sharp(resizedSrc)
+    .ensureAlpha()
+    .extractChannel('alpha')
+    .threshold(1)
     .toBuffer();
 
   const monoCanvas = sharp({
@@ -111,12 +116,6 @@ async function main() {
       background: { r: 0, g: 0, b: 0, alpha: 0 },
     },
   });
-
-  // Convert black glyph to white; treat black pixels as alpha mask
-  const monoMask = await sharp(monoContent)
-    .removeAlpha()
-    .toColourspace('b-w')
-    .toBuffer();
 
   const whiteGlyph = await sharp({
     create: {
@@ -130,7 +129,7 @@ async function main() {
     .toBuffer();
 
   const whiteGlyphMasked = await sharp(whiteGlyph)
-    .joinChannel(monoMask) // use mono as alpha
+    .joinChannel(alphaMask) // use alpha mask from source as the glyph shape
     .toBuffer();
 
   await monoCanvas

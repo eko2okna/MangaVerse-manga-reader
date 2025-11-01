@@ -104,7 +104,21 @@ export async function refreshToken() {
   }
 }
 
-// 📚 Pobieranie biblioteki użytkownika
+// � Wylogowanie: czyści zapisane tokeny i konfigurację klienta
+export async function logout() {
+  try {
+    await AsyncStorage.multiRemove([
+      TOKEN_KEY,
+      REFRESH_KEY,
+      CLIENT_ID_KEY,
+      CLIENT_SECRET_KEY,
+    ]);
+  } catch (e) {
+    // ignore
+  }
+}
+
+// �📚 Pobieranie biblioteki użytkownika
 export async function getLibrary() {
   let token = await getToken();
   if (!token) token = await refreshToken();
